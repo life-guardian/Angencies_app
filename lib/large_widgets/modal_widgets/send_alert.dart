@@ -2,13 +2,13 @@
 
 import 'dart:convert';
 
-import 'package:agencies_app/custom_functions/validate_textfield.dart';
-import 'package:agencies_app/large_widgets/map_widgets/exact_location.dart';
+import 'package:agencies_app/functions/validate_textfield.dart';
+import 'package:agencies_app/classes/exact_location.dart';
 import 'package:agencies_app/small_widgets/custom_elevated_buttons/manage_elevated_button.dart';
-import 'package:agencies_app/custom_functions/datepicker_function.dart';
+import 'package:agencies_app/functions/datepicker_function.dart';
 import 'package:agencies_app/small_widgets/custom_textfields/select_map_location_field.dart';
-import 'package:agencies_app/small_widgets/custom_textfields/textfield_modal.dart';
-import 'package:agencies_app/small_widgets/custom_dialogs/custom_google_maps_dialog.dart';
+import 'package:agencies_app/small_widgets/custom_textfields/text_form_field_modal.dart';
+import 'package:agencies_app/small_widgets/custom_dialogs/custom_osm_map_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_dialogs/custom_show_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_text_widgets/custom_text_widget.dart';
 import 'package:agencies_app/small_widgets/custom_textfields/text_in_textfield.dart';
@@ -69,7 +69,7 @@ class _SendAlertState extends State<SendAlert> {
   }
 
   void openMaps() async {
-    PickedData pickedLocationData = await customGoogleMapsDialog(
+    PickedData pickedLocationData = await customOsmMapDialog(
         context: context, titleText: 'Select Location to send alert');
     lat = pickedLocationData.latLong.latitude;
     lng = pickedLocationData.latLong.longitude;
@@ -120,10 +120,10 @@ class _SendAlertState extends State<SendAlert> {
     };
 
     try {
-      String sendAlertUrl = dotenv.get("sendAlertUrl");
+      String baseUrl = dotenv.get("BASE_URL");
 
       var response = await http.post(
-        Uri.parse(sendAlertUrl),
+        Uri.parse('$baseUrl/api/alert/agency/sendalert'),
         headers: {
           "Content-Type": "application/json",
           'Authorization': 'Bearer $jwtToken',
@@ -208,7 +208,7 @@ class _SendAlertState extends State<SendAlert> {
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 hintText: 'Fire and Safety Drill',
                 controller: alertNameController,
                 checkValidation: (value) =>

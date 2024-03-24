@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:agencies_app/constants/sizes.dart';
-import 'package:agencies_app/models/modal_bottom_sheet.dart';
+import 'package:agencies_app/functions/modal_bottom_sheet.dart';
 import 'package:agencies_app/models/registered_users.dart';
 import 'package:agencies_app/small_widgets/listview_builder/events/registered_users_listview.dart';
 import 'package:flutter/material.dart';
@@ -67,10 +67,10 @@ class _EventRegisteredListState extends State<EventRegisteredUsersScreen> {
 
   Future<List<RegisteredUsers>> getEventRegisteredUsersList(
       {required String id}) async {
-    String eventRegisteredUsersList = dotenv.get("eventRegisteredUsersList");
+    String baseUrl = dotenv.get("BASE_URL");
 
     var response = await http.get(
-      Uri.parse('$eventRegisteredUsersList$id'),
+      Uri.parse('$baseUrl/api/event/agency/registrations/$id'),
       headers: headers,
     );
 

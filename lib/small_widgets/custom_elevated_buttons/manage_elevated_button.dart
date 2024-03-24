@@ -24,11 +24,6 @@ class ManageElevatedButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50))),
         child: buttonItem,
-        //  Text(
-        //   buttonText,
-        //   style: GoogleFonts.mulish(
-        //       fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-        // ),
       ),
     );
   }

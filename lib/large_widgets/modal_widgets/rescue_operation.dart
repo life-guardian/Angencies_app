@@ -2,21 +2,26 @@
 
 import 'dart:convert';
 
-import 'package:agencies_app/custom_functions/validate_textfield.dart';
-import 'package:agencies_app/large_widgets/map_widgets/exact_location.dart';
-import 'package:agencies_app/small_widgets/custom_dialogs/custom_google_maps_dialog.dart';
+import 'package:agencies_app/functions/validate_textfield.dart';
+import 'package:agencies_app/classes/exact_location.dart';
+import 'package:agencies_app/providers/agencydetails_providers.dart';
+import 'package:agencies_app/providers/location_provider.dart';
+import 'package:agencies_app/screens/rescue_map_screen.dart';
+import 'package:agencies_app/small_widgets/custom_dialogs/custom_osm_map_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_dialogs/custom_show_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_elevated_buttons/manage_elevated_button.dart';
-import 'package:agencies_app/small_widgets/custom_textfields/select_map_location_field.dart';
-import 'package:agencies_app/small_widgets/custom_textfields/textfield_modal.dart';
+import 'package:agencies_app/small_widgets/custom_textfields/text_form_field_modal.dart';
 import 'package:agencies_app/small_widgets/custom_text_widgets/custom_text_widget.dart';
+import 'package:agencies_app/transitions_animations/custom_page_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
 import 'package:http/http.dart' as http;
 
-class RescueOperation extends StatefulWidget {
+class RescueOperation extends ConsumerStatefulWidget {
   const RescueOperation({
     super.key,
     required this.token,
@@ -24,10 +29,10 @@ class RescueOperation extends StatefulWidget {
   final token;
 
   @override
-  State<RescueOperation> createState() => _RescueOperationState();
+  ConsumerState<RescueOperation> createState() => _RescueOperationState();
 }
 
-class _RescueOperationState extends State<RescueOperation> {
+class _RescueOperationState extends ConsumerState<RescueOperation> {
   TextEditingController operationNameController = TextEditingController();
   TextEditingController teamSizeController = TextEditingController();
   TextEditingController descController = TextEditingController();
@@ -59,8 +64,30 @@ class _RescueOperationState extends State<RescueOperation> {
     );
   }
 
+  Future<void> getDeviceLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ref.read(accessLiveLocationProvider.notifier).state = false;
+        debugPrint("Location permission denied");
+      }
+    } else {
+      Position currentPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      lat = currentPosition.latitude;
+      lng = currentPosition.longitude;
+      ref.read(accessLiveLocationProvider.notifier).state = true;
+
+      debugPrint(
+          "Current Latitude: ${currentPosition.latitude.toString()} ,current Longitude: ${currentPosition.longitude.toString()}");
+    }
+  }
+
   void openMaps() async {
-    PickedData pickedLocationData = await customGoogleMapsDialog(
+    PickedData pickedLocationData = await customOsmMapDialog(
         context: context, titleText: 'Select Location to send alert');
     lat = pickedLocationData.latLong.latitude;
     lng = pickedLocationData.latLong.longitude;
@@ -76,15 +103,7 @@ class _RescueOperationState extends State<RescueOperation> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      if (address == null) {
-        customShowDialog(
-            context: context,
-            titleText: 'Something went wrong',
-            contentText:
-                'Please check that you have proper inputed operation location.');
-      } else {
-        startOperation();
-      }
+      startOperation();
     }
   }
 
@@ -101,8 +120,11 @@ class _RescueOperationState extends State<RescueOperation> {
       );
     });
 
+    await getDeviceLocation();
+
     final jwtToken = widget.token;
     var serverMessage;
+    bool hasAccessLiveLocation = ref.read(accessLiveLocationProvider);
 
     var reqBody = {
       "name": operationNameController.text,
@@ -112,49 +134,82 @@ class _RescueOperationState extends State<RescueOperation> {
       "rescueTeamSize": teamSizeController.text.toString()
     };
 
-    try {
-                            String rescueOperationUrl = dotenv.get("rescueOperationUrl");
+    if (hasAccessLiveLocation) {
+      try {
+        String baseUrl = dotenv.get("BASE_URL");
 
-      var response = await http.post(
-        Uri.parse(rescueOperationUrl),
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': 'Bearer $jwtToken',
-        },
-        body: json.encode(reqBody),
-      );
-
-      var jsonResponse = jsonDecode(response.body);
-
-      serverMessage = jsonResponse['message'];
-
-      if (response.statusCode == 200) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(serverMessage.toString()),
-          ),
+        var response = await http.post(
+          Uri.parse('$baseUrl/api/rescueops/agency/start'),
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': 'Bearer $jwtToken',
+          },
+          body: json.encode(reqBody),
         );
-      } else {
+
+        var jsonResponse = jsonDecode(response.body);
+
+        serverMessage = jsonResponse['message'];
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(serverMessage.toString()),
+            ),
+          );
+          String? rescueId = await getRescueOperationDetails();
+          ref.read(isRescueOperationOnGoingProvider.notifier).state = true;
+          ref.read(rescueOperationIdProvider.notifier).state = rescueId;
+          Navigator.of(context).pushReplacement(
+            CustomSlideTransition(
+              direction: AxisDirection.left,
+              child: const RescueMapScreen(),
+            ),
+          );
+        } else {
+          setState(() {
+            setButtonText();
+          });
+
+          customShowDialog(
+            context: context,
+            titleText: 'Something went wrong',
+            contentText: serverMessage.toString(),
+          );
+        }
+      } catch (e) {
         setState(() {
           setButtonText();
         });
 
-        customShowDialog(
-          context: context,
-          titleText: 'Something went wrong',
-          contentText: serverMessage.toString(),
-        );
+        debugPrint("Exception occured: ${e.toString()}");
       }
-    } catch (e) {
-      setState(() {
-        setButtonText();
-      });
-
-      debugPrint("Exception occured: ${e.toString()}");
+    } else {
+      customShowDialog(
+        context: context,
+        titleText: 'Please give access to location to start the operation',
+        contentText: serverMessage.toString(),
+      );
     }
 
     buttonEnabled = true;
+  }
+
+  Future<String?> getRescueOperationDetails() async {
+    var baseUrl = dotenv.get("BASE_URL");
+
+    var response = await http.get(
+      Uri.parse('$baseUrl/api/rescueops/agency/isongoing'),
+      headers: {"Authorization": "Bearer ${widget.token}"},
+    );
+
+    debugPrint("Status code: ${response.statusCode}");
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      return jsonResponse["rescueOpsId"];
+    }
+
+    return null;
   }
 
   @override
@@ -182,26 +237,12 @@ class _RescueOperationState extends State<RescueOperation> {
                 height: 31,
               ),
               const CustomTextWidget(
-                text: 'OPERATION LOCATION',
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              SelectMapLocationField(
-                onTap: openMaps,
-                address: address,
-                initialText: 'Give precise location access',
-              ),
-              const SizedBox(
-                height: 21,
-              ),
-              const CustomTextWidget(
                 text: 'RESCUE OPERATION NAME',
               ),
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 hintText: 'Enter Rescue operation name',
                 controller: operationNameController,
                 checkValidation: (value) =>
@@ -216,7 +257,7 @@ class _RescueOperationState extends State<RescueOperation> {
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 keyboardType: TextInputType.number,
                 hintText: 'Enter rescue team size',
                 controller: teamSizeController,
@@ -232,7 +273,7 @@ class _RescueOperationState extends State<RescueOperation> {
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 hintText: 'Enter description',
                 controller: descController,
                 checkValidation: (value) =>

@@ -5,7 +5,7 @@ import 'package:agencies_app/large_widgets/modal_widgets/filter_history.dart';
 
 import 'package:agencies_app/models/alert_history.dart';
 import 'package:agencies_app/models/event_history.dart';
-import 'package:agencies_app/models/modal_bottom_sheet.dart';
+import 'package:agencies_app/functions/modal_bottom_sheet.dart';
 import 'package:agencies_app/models/operation_history.dart';
 import 'package:agencies_app/providers/alert_history_provider.dart';
 import 'package:agencies_app/providers/event_history_provider.dart';
@@ -80,11 +80,11 @@ class _HistoryState extends ConsumerState<History> {
     };
   }
 
-  Future<void> getAlertHistoryData() async {
-    String alertHistoryUrl = dotenv.get("alertHistoryUrl");
+  String baseUrl = dotenv.get("BASE_URL");
 
+  Future<void> getAlertHistoryData() async {
     var response = await http.get(
-      Uri.parse(alertHistoryUrl),
+      Uri.parse('$baseUrl/api/history/agency/alerts'),
       headers: headers,
     );
 
@@ -108,10 +108,8 @@ class _HistoryState extends ConsumerState<History> {
   }
 
   Future<void> getEventHistoryData() async {
-    String eventHistoryUrl = dotenv.get("eventHistoryUrl");
-
     var response = await http.get(
-      Uri.parse(eventHistoryUrl),
+      Uri.parse('$baseUrl/api/history/agency/events'),
       headers: headers,
     );
 
@@ -128,10 +126,8 @@ class _HistoryState extends ConsumerState<History> {
   }
 
   Future<void> getOperationHistoryData() async {
-    String operationHistoryUrl = dotenv.get("operationHistoryUrl");
-
     var response = await http.get(
-      Uri.parse(operationHistoryUrl),
+      Uri.parse('$baseUrl/api/history/agency/operations'),
       headers: headers,
     );
 

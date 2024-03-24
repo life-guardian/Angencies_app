@@ -28,7 +28,6 @@ migrate_working_dir/
 .flutter-plugins
 .flutter-plugins-dependencies
 .env
-# *.lock
 .packages
 .pub-cache/
 .pub/

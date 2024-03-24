@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'package:agencies_app/constants/sizes.dart';
 import 'package:agencies_app/models/event_list.dart';
-import 'package:agencies_app/models/modal_bottom_sheet.dart';
+import 'package:agencies_app/functions/modal_bottom_sheet.dart';
 import 'package:agencies_app/providers/manage_events_provider.dart';
 import 'package:agencies_app/small_widgets/listview_builder/events/manage_event_listview.dart';
 import 'package:flutter/material.dart';
@@ -69,12 +69,11 @@ class _ManageEventsScreenState extends ConsumerState<ManageEventsScreen> {
     };
   }
 
-      String manageEventHistoryUrl = dotenv.get("manageEventHistoryUrl");
-
+  String baseUrl = dotenv.get("BASE_URL");
 
   Future<void> getEventList() async {
     var response = await http.get(
-      Uri.parse(manageEventHistoryUrl),
+      Uri.parse('$baseUrl/api/event/agency/list'),
       headers: headers,
     );
 

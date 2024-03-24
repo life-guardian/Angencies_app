@@ -8,7 +8,7 @@ import 'package:agencies_app/small_widgets/custom_dialogs/custom_show_dialog.dar
 import 'package:agencies_app/transitions_animations/custom_page_transition.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:agencies_app/small_widgets/custom_textfields/textfield_widget.dart';
+import 'package:agencies_app/small_widgets/custom_textfields/text_form_field_login_register.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -163,10 +163,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       "representativeName": representativeName.text.toString(),
     };
 
-    String registerurl = dotenv.get("registerurl");
+    String baseUrl = dotenv.get("BASE_URL");
 
     var response = await http.post(
-      Uri.parse(registerurl),
+      Uri.parse('$baseUrl/api/agency/register'),
       headers: {"Content-Type": "application/json"},
       body: json.encode(regBody),
     );
@@ -357,7 +357,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: formKey,
             child: Column(
               children: [
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Agency Name',
                   controllerText: agencyName,
                   checkValidation: (value) => validateName(value, 'Name'),
@@ -365,7 +365,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Agency Email',
                   controllerText: agencyEmail,
                   checkValidation: (value) => validateEmail(value, 'Email'),
@@ -373,7 +373,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Agency Ph No',
                   controllerText: agencyPhone,
                   checkValidation: (value) =>
@@ -382,7 +382,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Agency Address',
                   controllerText: agencyAddress,
                   checkValidation: (value) =>
@@ -391,7 +391,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Representative Name',
                   controllerText: representativeName,
                   checkValidation: (value) =>
@@ -400,7 +400,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Password',
                   controllerText: agencyPassword,
                   checkValidation: (value) =>
@@ -410,7 +410,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(
                   height: 21,
                 ),
-                TextFieldWidget(
+                TextFormFieldLoginRegister(
                   labelText: 'Confirm Password',
                   controllerText: agencyConfirmPassword,
                   checkValidation: (value) =>

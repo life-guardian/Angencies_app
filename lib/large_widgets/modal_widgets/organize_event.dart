@@ -2,15 +2,15 @@
 
 import 'dart:convert';
 
-import 'package:agencies_app/custom_functions/validate_textfield.dart';
-import 'package:agencies_app/large_widgets/map_widgets/exact_location.dart';
+import 'package:agencies_app/functions/validate_textfield.dart';
+import 'package:agencies_app/classes/exact_location.dart';
 import 'package:agencies_app/small_widgets/custom_textfields/select_map_location_field.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:agencies_app/small_widgets/custom_elevated_buttons/manage_elevated_button.dart';
-import 'package:agencies_app/custom_functions/datepicker_function.dart';
-import 'package:agencies_app/small_widgets/custom_textfields/textfield_modal.dart';
-import 'package:agencies_app/small_widgets/custom_dialogs/custom_google_maps_dialog.dart';
+import 'package:agencies_app/functions/datepicker_function.dart';
+import 'package:agencies_app/small_widgets/custom_textfields/text_form_field_modal.dart';
+import 'package:agencies_app/small_widgets/custom_dialogs/custom_osm_map_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_dialogs/custom_show_dialog.dart';
 import 'package:agencies_app/small_widgets/custom_text_widgets/custom_text_widget.dart';
 import 'package:agencies_app/small_widgets/custom_textfields/text_in_textfield.dart';
@@ -68,8 +68,7 @@ class _OrganizeEventState extends State<OrganizeEvent> {
   }
 
   void openMaps() async {
-    PickedData pickedLocationData =
-        await customGoogleMapsDialog(context: context);
+    PickedData pickedLocationData = await customOsmMapDialog(context: context);
     lat = pickedLocationData.latLong.latitude;
     lng = pickedLocationData.latLong.longitude;
     try {
@@ -120,11 +119,10 @@ class _OrganizeEventState extends State<OrganizeEvent> {
     };
 
     try {
-                      String awarenessEventUrl = dotenv.get("awarenessEventUrl");
-
+      String baseUrl = dotenv.get("BASE_URL");
 
       var response = await http.post(
-        Uri.parse(awarenessEventUrl),
+        Uri.parse('$baseUrl/api/event/agency/add'),
         headers: {
           "Content-Type": "application/json",
           'Authorization': 'Bearer $jwtToken',
@@ -208,7 +206,7 @@ class _OrganizeEventState extends State<OrganizeEvent> {
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 hintText: 'Enter event name',
                 controller: eventNameController,
                 checkValidation: (value) =>
@@ -223,7 +221,7 @@ class _OrganizeEventState extends State<OrganizeEvent> {
               const SizedBox(
                 height: 5,
               ),
-              TextfieldModal(
+              TextFormFieldModal(
                 hintText: 'Enter event description',
                 controller: descController,
                 checkValidation: (value) =>

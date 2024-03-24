@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_typing_uninitialized_variables, use_build_context_synchronously, no_logic_in_create_state
+import 'dart:convert';
+
 import 'package:agencies_app/constants/sizes.dart';
-import 'package:agencies_app/providers/agencyname_provider.dart';
+import 'package:agencies_app/providers/agencydetails_providers.dart';
 import 'package:agencies_app/providers/alert_history_provider.dart';
 import 'package:agencies_app/providers/event_history_provider.dart';
 import 'package:agencies_app/providers/location_provider.dart';
@@ -12,8 +14,10 @@ import 'package:agencies_app/screens/user_account_details.dart';
 import 'package:agencies_app/screens/welcome_screen.dart';
 import 'package:agencies_app/small_widgets/custom_text_widgets/custom_text_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TabsBottom extends ConsumerStatefulWidget {
@@ -26,6 +30,7 @@ class TabsBottom extends ConsumerStatefulWidget {
 
 class _TabsBottomState extends ConsumerState<TabsBottom> {
   bool dataLoaded = false;
+  late SharedPreferences prefs;
   Widget activePage = const Center(
     child: CircularProgressIndicator(
       color: Colors.grey,
@@ -38,6 +43,33 @@ class _TabsBottomState extends ConsumerState<TabsBottom> {
   void initState() {
     super.initState();
     getDeviceLocation();
+    addTokenProvider();
+  }
+
+  Future<void> getRescueOperationDetails() async {
+    var baseUrl = dotenv.get("BASE_URL");
+
+    var response = await http.get(
+      Uri.parse('$baseUrl/api/rescueops/agency/isongoing'),
+      headers: {"Authorization": "Bearer ${widget.myToken}"},
+    );
+
+    debugPrint("Status code: ${response.statusCode}");
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      ref.read(isRescueOperationOnGoingProvider.notifier).state =
+          jsonResponse["isRescueOperationOnGoing"];
+      ref.read(rescueOperationIdProvider.notifier).state =
+          jsonResponse["rescueOpsId"];
+    }
+
+    return;
+  }
+
+  void addTokenProvider() {
+    Future.delayed(const Duration(seconds: 3), () {
+      ref.read(tokenProvider.notifier).state = widget.myToken;
+    });
   }
 
   void onSelectedTab(int index) {
@@ -69,6 +101,8 @@ class _TabsBottomState extends ConsumerState<TabsBottom> {
           "Current Latitude: ${currentPosition.latitude.toString()} ,current Longitude: ${currentPosition.longitude.toString()}");
     }
 
+    await getRescueOperationDetails();
+
     setState(() {
       dataLoaded = true;
     });
@@ -94,7 +128,7 @@ class _TabsBottomState extends ConsumerState<TabsBottom> {
       ),
     );
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
     prefs.remove('token');
 
     // reset all provider to intial state
@@ -128,7 +162,7 @@ class _TabsBottomState extends ConsumerState<TabsBottom> {
   Widget build(BuildContext context) {
     _screenWidth = MediaQuery.of(context).size.width;
 
-    if (dataLoaded == true) {
+    if (dataLoaded) {
       if (_currentIndx == 1) {
         activePage = UserAccountDetails(
           logoutUser: _logoutUser,

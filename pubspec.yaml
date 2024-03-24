@@ -47,6 +47,8 @@ dependencies:
   flutter_map: ^3.1.0
   latlong2: ^0.8.2
   flutter_dotenv: ^5.1.0
+  url_launcher: ^6.2.3
+  socket_io_client: ^2.0.3
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +82,7 @@ flutter:
   assets:
     - assets/images/
     - assets/logos/
+    - assets/images/rescue_map/
     - .env
   #   - images/a_dot_ham.jpeg
 

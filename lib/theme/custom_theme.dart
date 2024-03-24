@@ -27,29 +27,6 @@ ThemeData lightTheme = ThemeData(
   ),
 );
 
-// ThemeData darkTheme = ThemeData(
-//   textButtonTheme: const TextButtonThemeData(
-//     style: ButtonStyle(
-//       foregroundColor: MaterialStatePropertyAll(Colors.blue),
-//     ),
-//   ),
-//   brightness: Brightness.light,
-//   colorScheme: ColorScheme.light(
-//     background: Colors.grey.shade200,
-//     primary: Colors.grey.shade50,
-//     secondary: Colors.white,
-//     tertiary: const Color(0xff1E232C),
-//   ),
-//   datePickerTheme: DatePickerThemeData(
-//     backgroundColor: Colors.white,
-//     headerBackgroundColor: Colors.blue[200],
-//     dayOverlayColor: const MaterialStatePropertyAll(Colors.black),
-//     shape: RoundedRectangleBorder(
-//       borderRadius: BorderRadius.circular(30),
-//     ),
-//   ),
-// );
-
 ThemeData darkTheme = ThemeData(
   textButtonTheme: const TextButtonThemeData(
     style: ButtonStyle(

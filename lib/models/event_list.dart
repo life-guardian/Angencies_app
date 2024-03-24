@@ -15,13 +15,4 @@ class EventList {
     eventPlace = json['eventPlace'].cast<double>();
     eventDate = json['eventDate'];
   }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
-    data['eventId'] = eventId;
-    data['eventName'] = eventName;
-    data['eventPlace'] = eventPlace;
-    data['eventDate'] = eventDate;
-    return data;
-  }
 }

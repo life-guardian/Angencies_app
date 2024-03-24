@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class TextFieldWidget extends StatefulWidget {
-  const TextFieldWidget({
+class TextFormFieldLoginRegister extends StatefulWidget {
+  const TextFormFieldLoginRegister({
     super.key,
     this.labelText = '',
     this.hideText = false,
@@ -19,13 +19,14 @@ class TextFieldWidget extends StatefulWidget {
   final TextEditingController controllerText;
 
   @override
-  State<TextFieldWidget> createState() =>
+  State<TextFormFieldLoginRegister> createState() =>
       // ignore: no_logic_in_create_state
-      _TextFieldWidgetState(selectedObscure: hideText);
+      _TextFormFieldLoginRegisterState(selectedObscure: hideText);
 }
 
-class _TextFieldWidgetState extends State<TextFieldWidget> {
-  _TextFieldWidgetState({required this.selectedObscure});
+class _TextFormFieldLoginRegisterState
+    extends State<TextFormFieldLoginRegister> {
+  _TextFormFieldLoginRegisterState({required this.selectedObscure});
   bool selectedObscure;
 
   void _obscuretxt() {
@@ -42,7 +43,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
       controller: widget.controllerText,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       cursorColor: Theme.of(context).colorScheme.onBackground,
-      cursorErrorColor: Colors.red,
+      // cursorErrorColor: Colors.red,
       validator: (value) => widget.checkValidation(value),
       selectionControls: DesktopTextSelectionControls(),
       decoration: InputDecoration(

@@ -2,12 +2,12 @@
 
 import 'dart:convert';
 
-import 'package:agencies_app/large_widgets/card_widgets/event_rescue_count.dart';
+import 'package:agencies_app/large_widgets/card_widgets/event_rescue_count_card.dart';
 import 'package:agencies_app/large_widgets/modal_widgets/organize_event.dart';
 import 'package:agencies_app/large_widgets/modal_widgets/rescue_operation.dart';
 import 'package:agencies_app/large_widgets/modal_widgets/send_alert.dart';
-import 'package:agencies_app/models/modal_bottom_sheet.dart';
-import 'package:agencies_app/providers/agencyname_provider.dart';
+import 'package:agencies_app/functions/modal_bottom_sheet.dart';
+import 'package:agencies_app/providers/agencydetails_providers.dart';
 
 import 'package:agencies_app/screens/managae_events_screen.dart';
 import 'package:agencies_app/screens/rescue_map_screen.dart';
@@ -37,6 +37,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String? eventsCount;
   String? rescueCount;
   String? agencyname;
+  late bool isRescueOnGoing;
 
   // late double rescuseLineBarCount;
   // late double eventsLineBarCount;
@@ -48,10 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Map jwtDecoded = JwtDecoder.decode(widget.token);
-    // userId = jwtDecoded['id'];
     getAgencyDataFromServer();
-
     // code to decode data from server
   }
 
@@ -63,10 +61,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'Authorization': 'Bearer $jwtToken'
     };
 
-    String getAgencyHomeScreenUrl = dotenv.get("getAgencyHomeScreenUrl");
+    String baseUrl = dotenv.get("BASE_URL");
 
     var response = await http.get(
-      Uri.parse(getAgencyHomeScreenUrl),
+      Uri.parse('$baseUrl/api/agency/eventroperationcount'),
       headers: headers,
     );
 
@@ -86,9 +84,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .update((state) => [eventsCount ?? '0', rescueCount ?? '0']);
   }
 
+  void navigateToRescueMaps() {
+    Navigator.of(context).push(
+      CustomSlideTransition(
+        direction: AxisDirection.left,
+        child: const RescueMapScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // final screenWidth = MediaQuery.of(context).size.width;
+    isRescueOnGoing = ref.watch(isRescueOperationOnGoingProvider);
 
     ThemeData themeData = Theme.of(context);
     agencyname = ref.watch(agencyNameProvider);
@@ -161,13 +168,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ManageCard(
                     text1: 'Rescue Operation',
                     text2: 'Start',
-                    showModal: () async {
-                      await modalBottomSheet.openModal(
-                        context: context,
-                        widget: RescueOperation(token: widget.token),
-                      );
-                      getAgencyDataFromServer();
-                    },
+                    showModal: isRescueOnGoing
+                        ? () {
+                            navigateToRescueMaps();
+                          }
+                        : () async {
+                            await modalBottomSheet.openModal(
+                              context: context,
+                              widget: RescueOperation(token: widget.token),
+                            );
+                            getAgencyDataFromServer();
+                          },
                     lineColor1: Colors.yellow.shade400,
                     lineColor2: Colors.yellow.shade50,
                   ),
